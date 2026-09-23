@@ -908,7 +908,7 @@ class GatewayShutdownMixin:
         except Exception as e:
             logger.debug("Cron interrupt notification unavailable: %s", e)
             return 0
-        action = "restarting" if self._restart_requested else "shutting down"
+        action = "重启" if self._restart_requested else "关闭"
         notified: set = set()
         for job_id in job_ids:
             try:
@@ -924,9 +924,9 @@ class GatewayShutdownMixin:
                 continue
             job_name = job.get("name") or job_id
             msg = (
-                f"⚠️ Scheduled job '{job_name}' was cut short because Hermes is {action}; "
-                "no result this run. It will run again on schedule, or run it now with "
-                f"`hermes cron run {job_name}` once Hermes is back."
+                f"⚠️ 定时任务 ‘{job_name}’ 因 Hermes 正在{action}而被中断，本轮没有产出。"
+                "它会按原计划再次运行，也可以等 Hermes 恢复后执行 "
+                f"`hermes cron run {job_name}` 立即补跑。"
             )
             for target in targets or ():
                 try:
@@ -1011,13 +1011,13 @@ class GatewayShutdownMixin:
         """
         restart_source = self._restart_command_source if self._restart_requested else None
         msg = (
-            "⚠️ Hermes is shutting down — your current task will be interrupted. "
-            "When it is back online, send any message and I'll try to pick up where we left off."
+            "⚠️ Hermes 正在关闭——当前任务会被中断。"
+            "等我恢复在线后，随便发条消息，我会尝试从刚才中断的地方继续。"
         )
         if self._restart_requested:
             msg = (
-                "⚠️ Hermes is restarting — your current task will be interrupted. "
-                "Send any message after the restart and I'll try to resume where you left off."
+                "⚠️ Hermes 正在重启——当前任务会被中断。"
+                "重启完成后随便发条消息，我会尝试从刚才中断的地方继续。"
             )
         restart_key = None
         if restart_source is not None:

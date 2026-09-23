@@ -107,8 +107,8 @@ def _or_default(thunk, default, exc=(TypeError, ValueError)):
         return default
 
 
-DEFAULT_BUSY_TEXT_DEBOUNCE_SECONDS = 0.35
-DEFAULT_BUSY_TEXT_HARD_CAP_SECONDS = 1.0
+DEFAULT_BUSY_TEXT_DEBOUNCE_SECONDS = 3.0
+DEFAULT_BUSY_TEXT_HARD_CAP_SECONDS = 8.0
 
 
 def _thread_metadata_for_source(source, reply_to_message_id: str | None = None) -> dict | None:
@@ -2457,10 +2457,10 @@ class BasePlatformAdapter(ABC):
     # Shared cadence for adapters that batch: a quiet period long enough to merge a client-side
     # split (Telegram's measured envelope), short enough that a single short message is not
     # visibly delayed (#44883). Ceilings bound a misconfigured value fed to asyncio.sleep().
-    _TEXT_BATCH_DEFAULT_DELAY_S: float = 0.3
-    _TEXT_BATCH_MAX_DELAY_S: float = 2.0
-    _TEXT_BATCH_DEFAULT_SPLIT_DELAY_S: float = 1.0
-    _TEXT_BATCH_MAX_SPLIT_DELAY_S: float = 4.0
+    _TEXT_BATCH_DEFAULT_DELAY_S: float = 3.0
+    _TEXT_BATCH_MAX_DELAY_S: float = 6.0
+    _TEXT_BATCH_DEFAULT_SPLIT_DELAY_S: float = 3.0
+    _TEXT_BATCH_MAX_SPLIT_DELAY_S: float = 8.0
 
     def _coerce_float_extra(self, key: str, default: float, *, min_value: float = 0.0, max_value: Optional[float] = None) -> float:
         """Float from ``config.extra``; NaN/Inf/negative/unparseable → ``default``; clamped to ``[min_value, max_value]``."""

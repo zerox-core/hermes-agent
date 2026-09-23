@@ -683,9 +683,7 @@ class GatewayBusySessionMixin:
             logger.debug("Busy steer ack suppressed for session %s", session_key)
         return steer_ack_enabled
 
-    _BUSY_DEMOTED_TAIL = (
-        " — your message is queued for when it finishes (use /stop to cancel everything)."
-    )
+    _BUSY_DEMOTED_TAIL = "。它结束后我会接着处理你这条；/stop 可手动打断。"
 
     def _compose_busy_ack_message(
         self, event: MessageEvent, now: float, _busy_state, running_agent: Any, *,
@@ -725,21 +723,21 @@ class GatewayBusySessionMixin:
                 pass
         status_detail = f" ({', '.join(status_parts)})" if status_parts else ""
         if is_steer_mode and self._agent_has_active_subagents(running_agent):
-            head = "⏩ Steered into current run and its active subagent(s)"
-            tail = ". Your message arrives after their next tool call."
+            head = "⏩ 已并入当前任务（及其子任务）"
+            tail = "，它们下次调用工具后你的消息就会送达。"
         elif is_steer_mode:
-            head, tail = "⏩ Steered into current run", ". Your message arrives after the next tool call."
+            head, tail = "⏩ 已并入当前任务", "，下次调用工具后你的消息就会送达。"
         elif is_redirect_mode:
-            head, tail = "↪ Redirected current run", ". I'll adjust using your correction."
+            head, tail = "↪ 已按你的消息调整当前任务", "。"
         elif is_queue_mode and demoted_for_subagents:
             # Explain the demotion: the follow-up didn't kill the subagent; /stop is the escape hatch.
-            head, tail = "⏳ Subagent working", self._BUSY_DEMOTED_TAIL
+            head, tail = "⏳ 子任务还在收尾", self._BUSY_DEMOTED_TAIL
         elif is_queue_mode and demoted_for_compression:
-            head, tail = "⏳ Compressing context", self._BUSY_DEMOTED_TAIL
+            head, tail = "⏳ 正在压缩上下文", self._BUSY_DEMOTED_TAIL
         elif is_queue_mode:
-            head, tail = "⏳ Queued for the next turn", ". I'll respond once the current task finishes."
+            head, tail = "⏳ 已排队，下一个回合处理", "。当前任务一结束我就回你。"
         else:
-            head, tail = "⚡ Interrupting current task", ". I'll respond to your message shortly."
+            head, tail = "⚡ 正在打断当前任务", "。马上就轮到你这条消息。"
         message = f"{head}{status_detail}{tail}"
 
         # One-time onboarding hint about the queue/interrupt knob (flag persisted to config.yaml).
@@ -1024,7 +1022,7 @@ class GatewayBusySessionMixin:
                 internal=event.internal, timestamp=event.timestamp,
             ), adapter)
         depth = self._queue_depth(quick_key, adapter=adapter)
-        return "Queued for the next turn." + (f" ({depth} queued)" if depth > 1 else "")
+        return "已排队，等当前任务结束就回你。" + (f"（当前队列 {depth} 条）" if depth > 1 else "")
 
     async def _busy_steer_command(self, event: MessageEvent, quick_key: str, source):
         # /steer lands BETWEEN tool-call iterations of the same run (appended to the last tool
