@@ -142,7 +142,7 @@ _MAX_TEXT_INJECT_BYTES = 100 * 1024
 _FEISHU_CONNECT_ATTEMPTS = 3
 _FEISHU_SEND_ATTEMPTS = 3
 _FEISHU_APP_LOCK_SCOPE = "feishu-app-id"
-_DEFAULT_TEXT_BATCH_DELAY_SECONDS = 0.6
+_DEFAULT_TEXT_BATCH_DELAY_SECONDS = 3.0
 _DEFAULT_TEXT_BATCH_MAX_MESSAGES = 8
 _DEFAULT_TEXT_BATCH_MAX_CHARS = 4000
 _DEFAULT_MEDIA_BATCH_DELAY_SECONDS = 0.8
@@ -1399,7 +1399,7 @@ class FeishuAdapter(BasePlatformAdapter):
             bot_name=_secret("FEISHU_BOT_NAME"),
             dedup_cache_size=max(32, env_int("HERMES_FEISHU_DEDUP_CACHE_SIZE", _DEFAULT_DEDUP_CACHE_SIZE)),
             text_batch_delay_seconds=env_float("HERMES_FEISHU_TEXT_BATCH_DELAY_SECONDS", _DEFAULT_TEXT_BATCH_DELAY_SECONDS),
-            text_batch_split_delay_seconds=env_float("HERMES_FEISHU_TEXT_BATCH_SPLIT_DELAY_SECONDS", 2.0),
+            text_batch_split_delay_seconds=env_float("HERMES_FEISHU_TEXT_BATCH_SPLIT_DELAY_SECONDS", 4.0),
             text_batch_max_messages=max(1, env_int("HERMES_FEISHU_TEXT_BATCH_MAX_MESSAGES", _DEFAULT_TEXT_BATCH_MAX_MESSAGES)),
             text_batch_max_chars=max(1, env_int("HERMES_FEISHU_TEXT_BATCH_MAX_CHARS", _DEFAULT_TEXT_BATCH_MAX_CHARS)),
             media_batch_delay_seconds=env_float("HERMES_FEISHU_MEDIA_BATCH_DELAY_SECONDS", _DEFAULT_MEDIA_BATCH_DELAY_SECONDS),
