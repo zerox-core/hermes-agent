@@ -302,6 +302,16 @@ export interface CustomEndpoint {
   models: string[]
   name: string
   source?: string
+  /**
+   * The transport the runtime will actually POST, resolved the same way
+   * `runtime_provider` resolves it. Empty = auto-detect.
+   */
+  effective_api_mode?: CustomEndpointApiMode
+  /**
+   * The configured mode the runtime refused (e.g. `codex_responses` against a
+   * non-OpenAI host). Non-empty means `api_mode` is NOT in effect.
+   */
+  dropped_api_mode?: CustomEndpointApiMode
 }
 
 export interface CustomEndpointsResponse {

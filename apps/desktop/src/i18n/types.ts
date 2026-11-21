@@ -946,6 +946,10 @@ export interface Translations extends NoticeTranslations {
       newEndpoint: string
       apiMode: string
       autoDetect: string
+      /** "Routing via <mode>" — the transport the runtime actually uses. */
+      apiModeEffective: (mode: string) => string
+      /** Why a saved api_mode is being ignored on this endpoint. */
+      apiModeDropped: (dropped: string) => string
       couldNotLoad: string
       endpointSaved: string
       saveFailed: string

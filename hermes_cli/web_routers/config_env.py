@@ -452,14 +452,53 @@ def _endpoint_api_mode(entry: dict[str, Any]) -> str:
     return mode if mode in _DESKTOP_API_MODES else ""
 
 
+def _runtime_api_mode(entry: dict[str, Any], base_url: str, source: str = "providers") -> tuple[str, str]:
+    """``(effective_mode, dropped_mode)`` for a saved endpoint entry.
+
+    Only the LEGACY ``custom_providers:`` list drops a pinned ``api_mode``:
+    ``_resolve_plain_custom_api_mode`` refuses ``codex_responses`` for any host
+    that is not a known OpenAI endpoint and falls back to URL detection. A NAMED
+    ``providers.<key>`` entry reaches the runtime through ``_custom_runtime``,
+    which honours ``api_mode`` verbatim — its docstring states exactly that
+    ("named custom providers opt in via ``api_mode``").
+
+    Reporting a drop for a named entry would be a lie, and a loud one: the card
+    would warn about a mode the runtime is in fact using. The distinction is
+    therefore keyed on ``source``, not guessed from the URL.
+
+    ``dropped_mode`` is the configured mode the runtime refused (``""`` when the
+    configuration is honoured or when nothing was pinned).
+    """
+    configured = _endpoint_api_mode(entry)
+    if not configured:
+        return "", ""
+    # ``providers:<key>`` and the bare-``custom`` direct-config row both honour
+    # what they store; only the legacy list goes through the detour.
+    if source != "custom_providers":
+        return configured, ""
+    try:
+        from hermes_cli.runtime_provider import _detect_api_mode_for_url
+    except Exception:
+        return configured, ""
+    detected = _detect_api_mode_for_url(base_url or "")
+    if configured == "codex_responses" and detected != "codex_responses":
+        return detected or "chat_completions", configured
+    return configured, ""
+
+
 def _endpoint_row(
     endpoint_id: str, name: str, base_url: str, model: str, models: list[str], context_length,
     discover_models: bool, key_entry: dict[str, Any], is_current: bool, source: str,
 ) -> dict[str, Any]:
     has_api_key, api_key_preview = _api_key_display(key_entry)
+    effective_mode, dropped_mode = _runtime_api_mode(key_entry, base_url, source)
     return {
         "id": endpoint_id, "name": name, "base_url": base_url, "model": model, "models": models,
         "api_mode": _endpoint_api_mode(key_entry),
+        # What the runtime will actually POST. When it differs from `api_mode`, the
+        # UI flags it instead of showing a value the resolver already discarded.
+        "effective_api_mode": effective_mode,
+        "dropped_api_mode": dropped_mode,
         "context_length": context_length, "discover_models": discover_models,
         "has_api_key": has_api_key, "api_key_preview": api_key_preview,
         "is_current": is_current, "source": source,

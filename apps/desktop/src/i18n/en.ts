@@ -1140,6 +1140,12 @@ export const en: Translations = {
       newEndpoint: 'New endpoint',
       apiMode: 'API Mode',
       autoDetect: 'Auto-detect',
+      // `api_mode` is a request, not a guarantee: the runtime drops
+      // `codex_responses` on hosts that are not OpenAI endpoints. Showing the
+      // saved value alone made a silently-downgraded route look correct.
+      apiModeEffective: mode => `Routing via ${mode}`,
+      apiModeDropped: dropped =>
+        `Saved as ${dropped}, but this legacy endpoint is routed via Chat Completions instead.`,
       couldNotLoad: 'Could not load custom endpoints',
       endpointSaved: 'Custom endpoint saved.',
       saveFailed: 'Save failed',

@@ -15,6 +15,7 @@ import {
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { Check, Globe, Loader2, Plus, Save, Trash2, Zap } from '@/lib/icons'
+import { AlertTriangle } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { confirm } from '@/store/confirm'
 import { notify, notifyError } from '@/store/notifications'
@@ -54,6 +55,15 @@ const API_MODE_OPTIONS: readonly { id: CustomEndpointApiMode; label: string }[] 
   { id: 'codex_responses', label: 'Responses API' },
   { id: 'anthropic_messages', label: 'Anthropic Messages' }
 ]
+
+/** Human label for an api_mode id, for the "routing via …" line. */
+function apiModeLabel(mode: CustomEndpointApiMode | undefined): string {
+  if (!mode) {
+    return 'Auto-detect'
+  }
+
+  return API_MODE_OPTIONS.find(option => option.id === mode)?.label ?? mode
+}
 
 const EMPTY_FORM: EndpointForm = {
   apiKey: '',
@@ -376,7 +386,25 @@ export function CustomEndpointsSettings({ onConfigSaved, onMainModelChanged }: C
                     <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
                       <span>{endpoint.model}</span>
                       {endpoint.has_api_key && <span>{endpoint.api_key_preview ?? ce.apiKeySet}</span>}
+                      {/* Surface the transport the runtime will really use. Without
+                          this the card kept showing a saved api_mode the resolver had
+                          already discarded, so a Responses route silently running on
+                          Chat Completions looked correct. */}
+                      {endpoint.effective_api_mode && !endpoint.dropped_api_mode && (
+                        <span>{ce.apiModeEffective(apiModeLabel(endpoint.effective_api_mode))}</span>
+                      )}
                     </div>
+                    {endpoint.dropped_api_mode && (
+                      <div className="mt-1.5 flex items-start gap-1.5 text-xs text-warn">
+                        <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                        <span>
+                          {ce.apiModeDropped(apiModeLabel(endpoint.dropped_api_mode))}
+                          {endpoint.effective_api_mode
+                            ? ` ${ce.apiModeEffective(apiModeLabel(endpoint.effective_api_mode))}`
+                            : ''}
+                        </span>
+                      </div>
+                    )}
                   </button>
                   <div className="flex items-center gap-2 sm:justify-end">
                     <Button
@@ -449,6 +477,10 @@ export function CustomEndpointsSettings({ onConfigSaved, onMainModelChanged }: C
                 options={apiModeOptions}
                 value={form.apiMode}
               />
+              {/* Named endpoints honour a pinned mode verbatim, so this editor
+                  must NOT second-guess it — a wrong warning is worse than none.
+                  The card flags the legacy ``custom_providers:`` path, where the
+                  runtime really does rewrite Responses. */}
             </fieldset>
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem]">
               <label className="grid gap-1.5 text-xs text-muted-foreground">
